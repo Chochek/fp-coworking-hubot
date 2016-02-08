@@ -56,6 +56,7 @@ CLEAR_AT = process.env.HUBOT_LUNCHBOT_CLEAR_AT || '0 0 0 * * *' # midnight
 ##
 # setup cron
 CronJob = require("cron").CronJob
+cheerio = require('cheerio')
 
 module.exports = (robot) ->
 
@@ -147,3 +148,18 @@ module.exports = (robot) ->
   robot.respond /lunch config/i, (msg) ->
     msg.send "ROOM: #{ROOM} \nTIMEZONE: #{TIMEZONE} \nNOTIFY_AT: #{NOTIFY_AT} \nCLEAR_AT: #{CLEAR_AT}\n "
 
+  robot.respond /lunch options/i, (msg) ->
+    robot.http("http://www.lunch.hr/")
+      .get() (err, res, body) ->
+        $ = cheerio.load(body)
+        options = [];
+        message = '';
+        items = $('#slider2 li');
+
+        for i in [0...items.length]
+          options[i] = $(items[i]).find($('.slovo')).text() + ': ' + $(items[i]).find($('.tooltip')).attr('title');
+
+        for i in [0...options.length]
+          message += "\n#{options[i]}"
+
+        msg.send message;
