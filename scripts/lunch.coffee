@@ -16,7 +16,7 @@
 #   hubot remove my order <food> - just removes the users lunch order
 #   hubot lunch orders - list all the items in the current lunch order
 #   hubot cancel all orders - clears out list of items to be ordered
-#   hubot who should <order|pickup|get> lunch? - help choose who is responsible for lunch
+#   hubot lunch options - lists today's options from lunch.hr
 #   hubot lunch help - display help message
 # Notes:
 #   nom nom nom
