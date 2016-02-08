@@ -32,13 +32,30 @@ ROOM = process.env.HUBOT_LUNCHBOT_ROOM
 ##
 # Explain how to use the lunch bot
 MESSAGE = """
-Let's order lunch!!!! You can say:
+Let's order lunch!!!1 You can say:
 bot I want the BLT Sandwich - adds "BLT Sandwich" to the list of items to be ordered
 bot remove my order - removes your order
 bot cancel all orders - cancels all the orders
 bot lunch orders - lists all orders
+bot who should order|pickup|get lunch? - randomly selects person to either order or pickup lunch
 bot lunch help - displays this help message
 """
+
+##
+# Set to local timezone
+TIMEZONE = process.env.TZ
+
+##
+# Default lunch time
+NOTIFY_AT = process.env.HUBOT_LUNCHBOT_NOTIFY_AT || '0 0 11 * * *' # 11am everyday
+
+##
+# clear the lunch order on a schedule
+CLEAR_AT = process.env.HUBOT_LUNCHBOT_CLEAR_AT || '0 0 0 * * *' # midnight
+
+##
+# setup cron
+CronJob = require("cron").CronJob
 
 module.exports = (robot) ->
 
@@ -52,7 +69,7 @@ module.exports = (robot) ->
       Object.keys(robot.brain.data.lunch)
 
     add: (user, item) ->
-      # robot.brain.data.lunch = {}
+      robot.brain.data.lunch = {}
       robot.brain.data.lunch[user] = item
 
     remove: (user) ->
@@ -64,6 +81,29 @@ module.exports = (robot) ->
 
     notify: ->
       robot.messageRoom ROOM, MESSAGE
+
+  ##
+  # Define things to be scheduled
+  schedule =
+    notify: (time) ->
+      new CronJob(time, ->
+        lunch.notify()
+        return
+      , null, true, TIMEZONE)
+
+    clear: (time) ->
+      new CronJob(time, ->
+        robot.brain.data.lunch = {}
+        return
+      , null, true, TIMEZONE)
+
+  ##
+  # Schedule when to alert the ROOM that it's time to start ordering lunch
+  schedule.notify NOTIFY_AT
+
+  ##
+  # Schedule when the order should be cleared at
+  schedule.clear CLEAR_AT
 
   ##
   # List out all the orders
@@ -91,6 +131,13 @@ module.exports = (robot) ->
     lunch.clear()
 
   ##
+  # Help decided who should either order, pick up or get
+  robot.respond /who should (order|pick up|get) lunch?/i, (msg) ->
+    orders = lunch.get().map (user) -> user
+    key = Math.floor(Math.random() * orders.length)
+    msg.send "#{orders[key]} looks like you have to #{msg.match[1]} lunch today!"
+
+  ##
   # Display usage details
   robot.respond /lunch help/i, (msg) ->
     msg.send MESSAGE
@@ -98,5 +145,5 @@ module.exports = (robot) ->
   ##
   # Just print out the details on how the lunch bot is configured
   robot.respond /lunch config/i, (msg) ->
-    msg.send "ROOM: #{ROOM}"
+    msg.send "ROOM: #{ROOM} \nTIMEZONE: #{TIMEZONE} \nNOTIFY_AT: #{NOTIFY_AT} \nCLEAR_AT: #{CLEAR_AT}\n "
 
