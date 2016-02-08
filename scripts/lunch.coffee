@@ -32,7 +32,7 @@ ROOM = process.env.HUBOT_LUNCHBOT_ROOM
 ##
 # Explain how to use the lunch bot
 MESSAGE = """
-Let's order lunch!!!1 You can say:
+Let's order lunch!!! You can say:
 bot I want the BLT Sandwich - adds "BLT Sandwich" to the list of items to be ordered
 bot remove my order - removes your order
 bot cancel all orders - cancels all the orders
