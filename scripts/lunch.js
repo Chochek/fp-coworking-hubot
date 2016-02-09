@@ -64,7 +64,7 @@ module.exports = robot => {
       })
 
       options.forEach(op => {
-        message += '\n' + op.icon + '\n' + op.text
+        message += '\n' + op.icon + '\n' + op.text + '\n'
       })
       return msg.send(message)
     })
