@@ -53,14 +53,18 @@ module.exports = robot => {
       })
       items.forEach((item, i) => {
         let letter = $(item).find($('.slovo')).text()
+        let icon = ':lunch_' + letter.toLowerCase() + ':'
         let title = $(item).find($('.tooltip')).attr('title')
         if (letter && title) {
-          options[i] = `${letter}: ${title}`
+          options[i] = {
+            icon: `${icon}`,
+            text: `${letter}: ${title}`
+          }
         }
       })
 
       options.forEach(op => {
-        message += '\n' + op
+        message += '\n' + op.icon + '\n' + op.text
       })
       return msg.send(message)
     })
