@@ -16,7 +16,6 @@ module.exports = robot => {
       return Object.keys(robot.brain.data.lunch)
     },
     add: (user, item) => {
-      robot.brain.data.lunch = {}
       robot.brain.data.lunch[user] = item
       return robot.brain.data.lunch[user]
     },
