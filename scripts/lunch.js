@@ -70,9 +70,28 @@ module.exports = robot => {
   })
 
   robot.respond(/lunch orders$/i, msg => {
-    const orders = lunch.get().map(user => {
-      return user + ': ' + robot.brain.data.lunch[user]
+    let displayOrders = {}
+    let orders = []
+    lunch.get().forEach(user => {
+      const letter = robot.brain.data.lunch[user]
+      if (!displayOrders[letter]) {
+        displayOrders[letter] = {
+          number: 1,
+          users: [user]
+        }
+      } else {
+        displayOrders[letter].number++
+        displayOrders[letter].users.push(user)
+      }
     })
+
+    for (let prop in displayOrders) {
+      if (displayOrders.hasOwnProperty(prop)) {
+        const val = displayOrders[prop]
+        const message = `${prop}: ${val.number}(${val.users.join(',')})`
+        orders.push(message)
+      }
+    }
     return msg.send(orders.join('\n') || 'No items in the lunch list.')
   })
   robot.respond(/i want (.*)/i, msg => {
