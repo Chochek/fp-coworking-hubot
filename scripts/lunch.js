@@ -88,7 +88,7 @@ module.exports = robot => {
     for (let prop in displayOrders) {
       if (displayOrders.hasOwnProperty(prop)) {
         const val = displayOrders[prop]
-        const message = `${prop}: ${val.number}(${val.users.join(',')})`
+        const message = `${prop}: ${val.number} (${val.users.join(',')})`
         orders.push(message)
       }
     }
