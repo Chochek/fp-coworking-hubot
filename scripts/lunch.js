@@ -90,24 +90,28 @@ module.exports = robot => {
     lunch.get().forEach(user => {
       const letter = robot.brain.data.lunch[user]
       if (!displayOrders[letter]) {
-        displayOrders[letter] = {
-          number: 1,
-          users: [user]
-        }
+        displayOrders[letter] = [user]
       } else {
-        displayOrders[letter].number++
-        displayOrders[letter].users.push(user)
+        displayOrders[letter].push(user)
       }
     })
-
-    for (let prop in displayOrders) {
-      if (displayOrders.hasOwnProperty(prop)) {
-        const val = displayOrders[prop]
-        const message = `${prop}: ${val.number} (${val.users.join(',')})`
-        orders.push(message)
+    //  check if all lunches are available
+    lunch.getData().then($ => {
+      for (let prop in displayOrders) {
+        if (displayOrders.hasOwnProperty(prop)) {
+          const available = lunch.isAvailable(prop, $)
+          const val = displayOrders[prop]
+          let message
+          if (available) {
+            message = `${prop}: ${val.length} (${val.join(',')})`
+          } else {
+            message = `Hey @${val.join('@ ')} unfortunately your lunch has been sold out :(`
+          }
+          orders.push(message)
+        }
       }
-    }
-    return msg.send(orders.join('\n') || 'No items in the lunch list.')
+      return msg.send(orders.join('\n') || 'No items in the lunch list.')
+    })
   })
   robot.respond(/i want (.*)/i, msg => {
     const item = msg.match[1].trim()
