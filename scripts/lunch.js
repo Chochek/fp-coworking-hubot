@@ -64,16 +64,16 @@ module.exports = robot => {
           return items[key]
         }
       })
-      items.forEach((item, i) => {
+      items.forEach(item => {
         const letter = $(item).find($('.slovo')).text()
         const icon = ':lunch_' + letter.toLowerCase() + ':'
         const title = $(item).find($('.tooltip')).attr('title')
         const available = lunch.isAvailable(letter, $)
         if (letter && title && available) {
-          options[i] = {
+          options.push({
             icon: `${icon}`,
             text: `${letter}: ${title}`
-          }
+          })
         }
       })
 
@@ -105,7 +105,7 @@ module.exports = robot => {
           if (available) {
             message = `${prop}: ${val.length} (${val.join(',')})`
           } else {
-            message = `Hey @${val.join('@ ')} unfortunately your lunch has been sold out :(`
+            message = `${prop}: Hey @${val.join('@ ')} unfortunately your lunch has been sold out :(`
           }
           orders.push(message)
         }
