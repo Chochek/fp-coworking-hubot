@@ -10,7 +10,7 @@ const CLEAR_AT = process.env.HUBOT_LUNCHBOT_CLEAR_AT || '0 0 0 * * *'
 
 const requestOptions = {
   uri: 'http://www.lunch.hr/',
-  transform: function (body) {
+  transform: body => {
     return cheerio.load(body)
   }
 }
@@ -20,7 +20,7 @@ module.exports = robot => {
     robot.brain.data.lunch = {}
   }
   const lunch = {
-    get: function () {
+    get: () => {
       return Object.keys(robot.brain.data.lunch)
     },
     add: (user, item) => {
@@ -44,22 +44,18 @@ module.exports = robot => {
       let itemMapping = { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5 }
       let itemNumber = itemMapping[letter.toLowerCase()]
 
-      return $('#dostupnost' + itemNumber).text() === 'dostupno' ? true : false
+      return $('#dostupnost' + itemNumber).text() === 'dostupno'
     }
   }
   const schedule = {
-    notify: function (time) {},
-    clear: function (time) {}
+    notify: time => {},
+    clear: time => {}
   }
   schedule.notify(NOTIFY_AT)
   schedule.clear(CLEAR_AT)
 
   robot.respond(/(lunch options)/i, msg => {
-    return robot.http('http://www.lunch.hr/').get()((err, res, body) => {
-      if (err) {
-        throw err
-      }
-      let $ = cheerio.load(body)
+    lunch.getData().then($ => {
       let options = []
       let message = ''
       let items = $('#slider2 li')
@@ -69,10 +65,11 @@ module.exports = robot => {
         }
       })
       items.forEach((item, i) => {
-        let letter = $(item).find($('.slovo')).text()
-        let icon = ':lunch_' + letter.toLowerCase() + ':'
-        let title = $(item).find($('.tooltip')).attr('title')
-        if (letter && title) {
+        const letter = $(item).find($('.slovo')).text()
+        const icon = ':lunch_' + letter.toLowerCase() + ':'
+        const title = $(item).find($('.tooltip')).attr('title')
+        const available = lunch.isAvailable(letter, $)
+        if (letter && title && available) {
           options[i] = {
             icon: `${icon}`,
             text: `${letter}: ${title}`
@@ -114,12 +111,11 @@ module.exports = robot => {
   })
   robot.respond(/i want (.*)/i, msg => {
     const item = msg.match[1].trim()
-    lunch.getData().then(function($) {
+    lunch.getData().then($ => {
       if (lunch.isAvailable(item, $)) {
         lunch.add(msg.message.user.name, item)
         return msg.send(`ok, added ${item} to your order.`)
-      }
-      else {
+      } else {
         return msg.send(`sorry, ${item} is no longer available. Do you want anything else?`)
       }
     })
@@ -135,7 +131,7 @@ module.exports = robot => {
   robot.respond(/lunch help/i, msg => {
     return msg.send(MESSAGE)
   })
-  return robot.respond(/lunch config/i, function (msg) {
+  return robot.respond(/lunch config/i, msg => {
     return msg.send(`ROOM: ${ROOM} \nTIMEZONE: ${TIMEZONE} \nNOTIFY_AT: ${NOTIFY_AT} \nCLEAR_AT: ${CLEAR_AT} \n`)
   })
 }
