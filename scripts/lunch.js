@@ -1,11 +1,19 @@
 'use strict'
 const cheerio = require('cheerio')
+const rp = require('request-promise')
 
 const ROOM = process.env.HUBOT_LUNCHBOT_ROOM
 const MESSAGE = 'Let\'s order lunch!!! You can say:\nbot I want A - adds "A" to the list of items to be ordered\nbot remove my order - removes your order\nbot cancel all orders - cancels all the orders\nbot lunch orders - lists all orders\nbot lunch options - lists today\'s options from lunch.hr\nbot lunch help - displays this help message'
 const TIMEZONE = process.env.TZ
 const NOTIFY_AT = process.env.HUBOT_LUNCHBOT_NOTIFY_AT || '0 0 11 * * *'
 const CLEAR_AT = process.env.HUBOT_LUNCHBOT_CLEAR_AT || '0 0 0 * * *'
+
+const requestOptions = {
+  uri: 'http://www.lunch.hr/',
+  transform: function (body) {
+    return cheerio.load(body)
+  }
+}
 
 module.exports = robot => {
   if (robot.brain.data.lunch == null) {
@@ -28,6 +36,15 @@ module.exports = robot => {
     },
     notify: () => {
       return robot.messageRoom(ROOM, MESSAGE)
+    },
+    getData: () => {
+      return rp(requestOptions)
+    },
+    isAvailable: (letter, $) => {
+      let itemMapping = { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5 }
+      let itemNumber = itemMapping[letter.toLowerCase()]
+
+      return $('#dostupnost' + itemNumber).text() === 'dostupno' ? true : false
     }
   }
   const schedule = {
@@ -36,7 +53,8 @@ module.exports = robot => {
   }
   schedule.notify(NOTIFY_AT)
   schedule.clear(CLEAR_AT)
-  robot.respond(/lunch options/i, msg => {
+
+  robot.respond(/(lunch options)/i, msg => {
     return robot.http('http://www.lunch.hr/').get()((err, res, body) => {
       if (err) {
         throw err
@@ -96,8 +114,15 @@ module.exports = robot => {
   })
   robot.respond(/i want (.*)/i, msg => {
     const item = msg.match[1].trim()
-    lunch.add(msg.message.user.name, item)
-    return msg.send(`ok, added ${item} to your order.`)
+    lunch.getData().then(function($) {
+      if (lunch.isAvailable(item, $)) {
+        lunch.add(msg.message.user.name, item)
+        return msg.send(`ok, added ${item} to your order.`)
+      }
+      else {
+        return msg.send(`sorry, ${item} is no longer available. Do you want anything else?`)
+      }
+    })
   })
   robot.respond(/remove my order/i, msg => {
     lunch.remove(msg.message.user.name)
