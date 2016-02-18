@@ -115,6 +115,7 @@ module.exports = robot => {
   })
   robot.respond(/i want (.*)/i, msg => {
     const item = msg.match[1].trim()
+    item = item.toUpperCase()
     lunch.getData().then($ => {
       if (lunch.isAvailable(item, $)) {
         lunch.add(msg.message.user.name, item)
