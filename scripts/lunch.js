@@ -80,7 +80,7 @@ module.exports = robot => {
       options.forEach(op => {
         message += '\n' + op.icon + '\n' + op.text + '\n'
       })
-      return msg.send(message)
+      return msg.send(message || 'No lunch for you!')
     })
   })
 
@@ -114,8 +114,7 @@ module.exports = robot => {
     })
   })
   robot.respond(/i want (.*)/i, msg => {
-    const item = msg.match[1].trim()
-    item = item.toUpperCase()
+    const item = msg.match[1].trim().toUpperCase()
     lunch.getData().then($ => {
       if (lunch.isAvailable(item, $)) {
         lunch.add(msg.message.user.name, item)
