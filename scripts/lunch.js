@@ -105,7 +105,7 @@ module.exports = robot => {
           if (available) {
             message = `${prop}: ${val.length} (${val.join(',')})`
           } else {
-            message = `${prop}: Hey @${val.join('@ ')} unfortunately your lunch has been sold out :(`
+            message = `${prop}: Hey @${val.join(' @')} unfortunately your lunch has been sold out :(`
           }
           orders.push(message)
         }
